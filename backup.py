@@ -4,6 +4,8 @@ import os
 import shutil
 import time
 import math
+import sys
+import re
 
 
 def readableSize(bytes):
@@ -15,8 +17,13 @@ def readableSize(bytes):
   else:
     return '   0.00 B'
 
-
-
+def printToTerminalSize(text):
+  width = shutil.get_terminal_size().columns
+  half = int((width - 3)/2)
+  if len(text) > width:
+    text = re.sub(r'^(.{' + str(half) + '}).*(.{' + str(half) + '})$', '\g<1>...\g<2>', text)
+  sys.stdout.write('{:{}.{}}'.format(text, 2*half + 3, 2*half + 3))
+  
 
 backupDirTo = '/backupDirTo'
 backupDirFrom = ['/backupDirFrom']
@@ -64,6 +71,8 @@ for dirFrom in backupDirFrom:
     for file in files:
       fileFrom = os.path.join(root, file)
       fileTo = os.path.join(curDirTo, file)
+      printToTerminalSize(os.path.join(relPath, file))
+      sys.stdout.flush()
       copied = False
       if not (dirPrev is None):
         filePrev = os.path.join(dirPrev, relPath, file)
@@ -75,9 +84,15 @@ for dirFrom in backupDirFrom:
             copied = True
             sizeLinked += statFrom.st_size
       if not copied:
-        shutil.copy2(fileFrom, fileTo)
+        sys.stdout.write('\r')
+        sys.stdout.flush()
         print('    ' + os.path.join(relPath, file))
+        shutil.copy2(fileFrom, fileTo)
         sizeCopied += os.stat(fileFrom).st_size
+      else:
+        sys.stdout.write('\r')
+        sys.stdout.flush()
+
   print('  Copied: ' + readableSize(sizeCopied))
   print('  Linked: ' + readableSize(sizeLinked))
 
