@@ -70,7 +70,7 @@ for dirFrom in backupDirFrom:
         if os.path.isfile(filePrev):
           statFrom = os.stat(fileFrom)
           statPrev = os.stat(filePrev)
-          if (statFrom.st_size == statPrev.st_size) and (statFrom.st_mtime == statPrev.st_mtime):
+          if (statFrom.st_size == statPrev.st_size) and (round(statFrom.st_mtime) == round(statPrev.st_mtime)):
             os.link(filePrev, fileTo)
             copied = True
             sizeLinked += statFrom.st_size
