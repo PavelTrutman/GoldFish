@@ -86,10 +86,16 @@ for dirFrom in backupDirFrom:
       if not copied:
         sys.stdout.write('\r')
         sys.stdout.flush()
+        printToTerminalSize(' ')
+        sys.stdout.write('\r')
+        sys.stdout.flush()
         print('    ' + os.path.join(relPath, file))
         shutil.copy2(fileFrom, fileTo)
         sizeCopied += os.stat(fileFrom).st_size
       else:
+        sys.stdout.write('\r')
+        sys.stdout.flush()
+        printToTerminalSize(' ')
         sys.stdout.write('\r')
         sys.stdout.flush()
 
