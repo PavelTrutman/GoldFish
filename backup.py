@@ -23,7 +23,18 @@ def printToTerminalSize(text):
   if len(text) > width:
     text = re.sub(r'^(.{' + str(half) + '}).*(.{' + str(half) + '})$', '\g<1>...\g<2>', text)
   sys.stdout.write('{:{}.{}}'.format(text, 2*half + 3, 2*half + 3))
-  
+
+def printHeadline():
+  print(\
+'   _____       _     _ ______ _     _     \n'\
+'  / ____|     | |   | |  ____(_)   | |    \n'\
+' | |  __  ___ | | __| | |__   _ ___| |__  \n'\
+' | | |_ |/ _ \| |/ _` |  __| | / __| \'_ \ \n'\
+' | |__| | (_) | | (_| | |    | \__ \ | | |\n'\
+'  \_____|\___/|_|\__,_|_|    |_|___/_| |_|\n'\
+)
+
+
 
 backupDirTo = '/backupDirTo'
 backupDirFrom = ['/backupDirFrom']
@@ -33,6 +44,8 @@ prevBackups = list(reversed(os.listdir(backupDirTo)))
 today = time.strftime('%Y%m%d_%H%M')
 dirToday = os.path.join(backupDirTo, today)
 os.mkdir(dirToday)
+
+printHeadline()
 
 print('Creating new backup: ' + today)
 
