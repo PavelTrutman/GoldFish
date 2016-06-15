@@ -6,33 +6,7 @@ import time
 import math
 import sys
 import re
-
-
-def readableSize(bytes):
-  suffixes = ['B', 'KB', 'MB', 'GB', 'TB']
-
-  if bytes:
-    order = int(math.log2(bytes) / 10)
-    return '{:7.2f} {}'.format(bytes / (1 << order * 10), suffixes[order])
-  else:
-    return '   0.00 B'
-
-def printToTerminalSize(text):
-  width = shutil.get_terminal_size().columns
-  half = int((width - 3)/2)
-  if len(text) > width:
-    text = re.sub(r'^(.{' + str(half) + '}).*(.{' + str(half) + '})$', '\g<1>...\g<2>', text)
-  sys.stdout.write('{:{}.{}}'.format(text, 2*half + 3, 2*half + 3))
-
-def printHeadline():
-  print(\
-'   _____       _     _ ______ _     _     \n'\
-'  / ____|     | |   | |  ____(_)   | |    \n'\
-' | |  __  ___ | | __| | |__   _ ___| |__  \n'\
-' | | |_ |/ _ \| |/ _` |  __| | / __| \'_ \ \n'\
-' | |__| | (_) | | (_| | |    | \__ \ | | |\n'\
-'  \_____|\___/|_|\__,_|_|    |_|___/_| |_|\n'\
-)
+import goldFish
 
 
 if __name__ == '__main__':
@@ -45,7 +19,7 @@ if __name__ == '__main__':
   dirToday = os.path.join(backupDirTo, today)
   os.mkdir(dirToday)
   
-  printHeadline()
+  goldFish.printHeadline()
   
   print('Creating new backup: ' + today)
   
@@ -84,7 +58,7 @@ if __name__ == '__main__':
       for file in files:
         fileFrom = os.path.join(root, file)
         fileTo = os.path.join(curDirTo, file)
-        printToTerminalSize(os.path.join(relPath, file))
+        goldFish.printToTerminalSize(os.path.join(relPath, file))
         sys.stdout.flush()
         copied = False
         if not (dirPrev is None):
@@ -99,7 +73,7 @@ if __name__ == '__main__':
         if not copied:
           sys.stdout.write('\r')
           sys.stdout.flush()
-          printToTerminalSize(' ')
+          goldFish.printToTerminalSize(' ')
           sys.stdout.write('\r')
           sys.stdout.flush()
           print('    ' + os.path.join(relPath, file))
@@ -108,10 +82,10 @@ if __name__ == '__main__':
         else:
           sys.stdout.write('\r')
           sys.stdout.flush()
-          printToTerminalSize(' ')
+          goldFish.printToTerminalSize(' ')
           sys.stdout.write('\r')
           sys.stdout.flush()
   
-    print('  Copied: ' + readableSize(sizeCopied))
-    print('  Linked: ' + readableSize(sizeLinked))
+    print('  Copied: ' + goldFish.readableSize(sizeCopied))
+    print('  Linked: ' + goldFish.readableSize(sizeLinked))
 
