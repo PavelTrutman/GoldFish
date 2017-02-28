@@ -19,4 +19,5 @@ setup (
   url='https://github.com/PavelTrutman/GoldFish',
   package_dir={'GoldFish' : '.'},
   packages = ['goldFish'],
+  entry_points={'console_scripts': ['goldFish = goldFish.backup:main']},
 )

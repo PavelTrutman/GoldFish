@@ -6,24 +6,36 @@ import time
 import math
 import sys
 import re
+import argparse
 from .goldFish import *
+from .config import Config
 
 
-if __name__ == '__main__':
-  backupDirTo = '/backupDirTo'
-  backupDirFrom = ['/backupDirFrom']
+def main():
+
+  # command line arguments parser
+  parser = argparse.ArgumentParser(add_help=False)
+  parser.prog = 'goldFish';
   
-  prevBackups = list(reversed(os.listdir(backupDirTo)))
+  parser.add_argument('--help', '-h', action='help', help='show this help message and exit')
+  parser.add_argument('configFile', type=str, help='path to the config file')
+  args = parser.parse_args()
+
+
+  config = Config(args.configFile)
+
+  prevBackups = os.listdir(config.backupDirTo)
+  prevBackups.sort(reverse=True)
   
   today = time.strftime('%Y%m%d_%H%M')
-  dirToday = os.path.join(backupDirTo, today)
+  dirToday = os.path.join(config.backupDirTo, today)
   os.mkdir(dirToday)
   
   printHeadline()
   
   print('Creating new backup: ' + today)
   
-  for dirFrom in backupDirFrom:
+  for dirFrom in config.backupDirFrom:
     backupDir = os.path.basename(dirFrom)
     dirTo = os.path.join(dirToday, backupDir)
     os.mkdir(dirTo)
@@ -32,7 +44,7 @@ if __name__ == '__main__':
     dirPrev = None
     datePrev = None
     for prev in prevBackups:
-      dirPrevTmp = os.path.join(backupDirTo, prev, backupDir)
+      dirPrevTmp = os.path.join(config.backupDirTo, prev, backupDir)
       if os.path.isdir(dirPrevTmp):
         dirPrev = dirPrevTmp
         datePrev = prev
@@ -89,3 +101,5 @@ if __name__ == '__main__':
     print('  Copied: ' + readableSize(sizeCopied))
     print('  Linked: ' + readableSize(sizeLinked))
 
+if __name__ == "__main__":
+  main()
