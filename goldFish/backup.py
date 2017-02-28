@@ -6,7 +6,7 @@ import time
 import math
 import sys
 import re
-import goldFish
+from .goldFish import *
 
 
 if __name__ == '__main__':
@@ -19,7 +19,7 @@ if __name__ == '__main__':
   dirToday = os.path.join(backupDirTo, today)
   os.mkdir(dirToday)
   
-  goldFish.printHeadline()
+  printHeadline()
   
   print('Creating new backup: ' + today)
   
@@ -58,7 +58,7 @@ if __name__ == '__main__':
       for file in files:
         fileFrom = os.path.join(root, file)
         fileTo = os.path.join(curDirTo, file)
-        goldFish.printToTerminalSize(os.path.join(relPath, file))
+        printToTerminalSize(os.path.join(relPath, file))
         sys.stdout.flush()
         copied = False
         if not (dirPrev is None):
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         if not copied:
           sys.stdout.write('\r')
           sys.stdout.flush()
-          goldFish.printToTerminalSize(' ')
+          printToTerminalSize(' ')
           sys.stdout.write('\r')
           sys.stdout.flush()
           print('    ' + os.path.join(relPath, file))
@@ -82,10 +82,10 @@ if __name__ == '__main__':
         else:
           sys.stdout.write('\r')
           sys.stdout.flush()
-          goldFish.printToTerminalSize(' ')
+          printToTerminalSize(' ')
           sys.stdout.write('\r')
           sys.stdout.flush()
   
-    print('  Copied: ' + goldFish.readableSize(sizeCopied))
-    print('  Linked: ' + goldFish.readableSize(sizeLinked))
+    print('  Copied: ' + readableSize(sizeCopied))
+    print('  Linked: ' + readableSize(sizeLinked))
 

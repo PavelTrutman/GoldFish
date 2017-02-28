@@ -6,14 +6,14 @@ import time
 import math
 import sys
 import re
-import goldFish
+from .goldFish import *
 
 
 if __name__ == '__main__':
   
   dirFrom = str(sys.argv[1])
 
-  goldFish.printHeadline()
+  printHeadline()
   print('Folder to inspect:' + dirFrom)
   sizeTotal = 0
   sizeDelete = 0
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     relPath = os.path.relpath(root, dirFrom)
     for file in files:
       fileFrom = os.path.join(root, file)
-      goldFish.printToTerminalSize(os.path.join(relPath, file))
+      printToTerminalSize(os.path.join(relPath, file))
       sys.stdout.flush()
 
       statFrom = os.stat(fileFrom)
@@ -32,10 +32,10 @@ if __name__ == '__main__':
 
       sys.stdout.write('\r')
       sys.stdout.flush()
-      goldFish.printToTerminalSize(' ')
+      printToTerminalSize(' ')
       sys.stdout.write('\r')
       sys.stdout.flush()
 
-  print('  Size of the backup:           ' + goldFish.readableSize(sizeTotal))
-  print('  Will be freed after deletion: ' + goldFish.readableSize(sizeDelete))
+  print('  Size of the backup:           ' + readableSize(sizeTotal))
+  print('  Will be freed after deletion: ' + readableSize(sizeDelete))
 
