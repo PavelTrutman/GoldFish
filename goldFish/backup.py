@@ -7,7 +7,7 @@ import math
 import sys
 import re
 import argparse
-from .os import *
+from .io import *
 from .config import Config
 
 

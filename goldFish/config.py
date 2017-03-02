@@ -15,8 +15,10 @@ class Config:
   Default config.
   """
   defaultConfig = {
-    'backupDirTo': '',
-    'backupDirFrom': [],
+    'folders': {
+      'dest': '',
+      'src': [],
+    },
   }
 
 
@@ -74,22 +76,22 @@ class Config:
     # laod config from file
     config = self.load(path)
 
-    # check backuoDirTo
-    if config['backupDirTo'] != '':
-      if os.path.exists(config['backupDirTo']):
-        self.backupDirTo = config['backupDirTo']
+    # check backupDirTo
+    if config['folders']['dest'] != '':
+      if os.path.exists(config['folders']['dest']):
+        self.backupDirTo = config['folders']['dest']
       else:
-         raise FileNotFoundError(config['backupDirTo'])
+         raise FileNotFoundError(config['folders']['dest'])
     else:
-      raise ConfigError('backupDirTo', config['backupDirTo'])
+      raise ConfigError('folders:dest', config['folders']['dest'])
 
-    if isinstance(config['backupDirFrom'], list) and len(config['backupDirFrom']) > 0:
-      for p in config['backupDirFrom']:
+    if isinstance(config['folders']['src'], list) and len(config['folders']['src']) > 0:
+      for p in config['folders']['src']:
         if not os.path.exists(p):
          raise FileNotFoundError(p)
-      self.backupDirFrom = config['backupDirFrom']
+      self.backupDirFrom = config['folders']['src']
     else:
-      raise ConfigError('backupDirFrom', config['backupDirFrom'])
+      raise ConfigError('folders:src', config['folders']['src'])
 
     # if everything pass, then save config
     self.config = config

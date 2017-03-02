@@ -6,7 +6,7 @@ import time
 import math
 import sys
 import re
-from .os import *
+from .io import *
 
 
 if __name__ == '__main__':
