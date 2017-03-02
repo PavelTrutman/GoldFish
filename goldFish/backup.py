@@ -7,7 +7,7 @@ import math
 import sys
 import re
 import argparse
-from .goldFish import *
+from .os import *
 from .config import Config
 
 

@@ -6,7 +6,7 @@ import time
 import math
 import sys
 import re
-from .goldFish import *
+from .os import *
 
 
 if __name__ == '__main__':
