@@ -198,7 +198,9 @@ def main():
           printToTerminalSize(' ')
           sys.stdout.write('\r')
           sys.stdout.flush()
-  
+
+    os.sync()
+
     print('  Copied:     ' + readableSize(sizeCopied))
     print('  Linked:     ' + readableSize(sizeLinked))
     print('  HashLinked: ' + readableSize(sizeHashLinked))
