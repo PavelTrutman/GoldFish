@@ -4,6 +4,7 @@ import shutil
 import math
 import sys
 import re
+import hashlib
 
 def readableSize(bytes):
   """
@@ -62,3 +63,55 @@ def printHeadline():
     '  \_____|\___/|_|\__,_|_|    |_|___/_| |_|\n'\
   )
 
+
+def queryYesNo(question, default=None):
+  """
+  Asks a yes/no question via raw_input() and return their answer.
+
+  Args:
+    question (str): a string that is presented to the user
+    default (str): the presumed answer if the user just hits <Enter>. It must be 'yes', 'no' or None (default) (meaning an answer is required of the user)
+
+  Returns:
+    bool: True for 'yes' or False for 'no'
+  """
+
+  valid = {'yes': True, 'y': True, 'no': False, 'n': False}
+  if default is None:
+    prompt = ' [y/n] '
+  elif default == 'yes':
+    prompt = ' [Y/n] '
+  elif default == 'no':
+    prompt = ' [y/N] '
+  else:
+    raise ValueError('Invalid default answer: {}'.format(default))
+
+  while True:
+    sys.stdout.write(question + prompt)
+    choice = input().lower()
+    if default is not None and choice == '':
+      return valid[default]
+    elif choice in valid:
+      return valid[choice]
+
+
+def hashFile(path):
+  """
+  Compute the SHA256 hash of the file.
+
+  Args:
+    path (str): path to the file
+
+  Returns:
+    str: hash of the file
+  """
+
+  fileHash = hashlib.sha256()
+  with open(path, 'rb') as f:
+    while True:
+      data = f.read(65536)
+      if not data:
+        break
+      fileHash.update(data)
+
+  return fileHash.hexdigest()

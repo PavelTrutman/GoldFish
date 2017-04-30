@@ -2,6 +2,10 @@
 
 import os
 import yaml
+import copy
+import pathlib
+import collections
+from os.path import normpath
 
 class Config:
   """
@@ -15,8 +19,13 @@ class Config:
   Default config.
   """
   defaultConfig = {
-    'backupDirTo': '',
-    'backupDirFrom': [],
+    'folders': {
+      'dest': '',
+      'src': [],
+    },
+    'database': {
+      'enable': False,
+    },
   }
 
 
@@ -51,8 +60,8 @@ class Config:
       raise ConfigFileError('Configuration file does not parse as a dictionary.')
 
     # merge loaded config with default values
-    config = self.defaultConfig.copy()
-    config.update(cfg)
+    config = copy.deepcopy(self.defaultConfig)
+    config = deepUpdate(config, cfg)
     return config
 
 
@@ -74,22 +83,33 @@ class Config:
     # laod config from file
     config = self.load(path)
 
-    # check backuoDirTo
-    if config['backupDirTo'] != '':
-      if os.path.exists(config['backupDirTo']):
-        self.backupDirTo = config['backupDirTo']
+    # check backupDirTo
+    if config['folders']['dest'] != '':
+      if os.path.exists(config['folders']['dest']):
+        self.backupDirTo = config['folders']['dest']
       else:
-         raise FileNotFoundError(config['backupDirTo'])
+         raise FileNotFoundError(config['folders']['dest'])
     else:
-      raise ConfigError('backupDirTo', config['backupDirTo'])
+      raise ConfigError('folders:dest', config['folders']['dest'])
 
-    if isinstance(config['backupDirFrom'], list) and len(config['backupDirFrom']) > 0:
-      for p in config['backupDirFrom']:
+    # check backupDirFrom
+    if isinstance(config['folders']['src'], list) and len(config['folders']['src']) > 0:
+      for p in config['folders']['src']:
         if not os.path.exists(p):
          raise FileNotFoundError(p)
-      self.backupDirFrom = config['backupDirFrom']
+      self.backupDirFrom = config['folders']['src']
     else:
-      raise ConfigError('backupDirFrom', config['backupDirFrom'])
+      raise ConfigError('folders:src', config['folders']['src'])
+
+    # check database
+    self.dbEnable = config['database']['enable']
+    if config['database']['enable']:
+      if config['database']['path'] == '':
+        raise ConfigError('database:path', config['database']['path'])
+      self.dbPath = normpath(str(pathlib.Path.cwd().joinpath(pathlib.Path(path).resolve().parent, config['database']['path']))) #libpath workaround
+      if config['database']['linkMtimeDiffer'] not in [True, False]:
+        raise ConfigError('database:linkMtimeDiffer', config['database']['linkMtimeDiffer'])
+      self.dbLinkMDiffer = config['database']['linkMtimeDiffer']
 
     # if everything pass, then save config
     self.config = config
@@ -138,3 +158,24 @@ class ConfigFileError(Exception):
 
     # calling super contructor
     super(Exception, self).__init__(message)
+
+
+def deepUpdate(d, u):
+  """
+  Performs deep update of two dictionaries.
+
+  Args:
+    d (dict): dictionary to update
+    u (dict): dictionary to update with
+
+  Reurns:
+    dict: updated dictionary
+  """
+
+  for k, v in u.items():
+    if isinstance(v, collections.Mapping):
+      r = deepUpdate(d.get(k, {}), v)
+      d[k] = r
+    else:
+      d[k] = u[k]
+  return d

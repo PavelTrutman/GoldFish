@@ -45,10 +45,16 @@ goldFish config.yml
 with `config.yml` file looking like this:
 
 ```yml
-backupDirTo: /media/user/external_hdd/backups
-backupDirFrom:
-- /home/user/firstDirToBackup
-- /home/user/secondDirToBackup
-- /etc
-- /var/lib
+folders:
+  dest: /media/user/external_hdd/backups
+  src:
+  - /home/user/firstDirToBackup
+  - /home/user/secondDirToBackup
+  - /etc
+  - /var/lib
+
+database:
+  enable: True
+  path: db.sqlite
+  linkMtimeDiffer: False
 ```
