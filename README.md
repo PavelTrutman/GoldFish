@@ -52,4 +52,9 @@ folders:
   - /home/user/secondDirToBackup
   - /etc
   - /var/lib
+
+database:
+  enable: True
+  path: db.sqlite
+  linkMtimeDiffer: False
 ```

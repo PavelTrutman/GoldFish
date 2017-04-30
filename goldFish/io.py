@@ -4,6 +4,7 @@ import shutil
 import math
 import sys
 import re
+import hashlib
 
 def readableSize(bytes):
   """
@@ -92,3 +93,25 @@ def queryYesNo(question, default=None):
       return valid[default]
     elif choice in valid:
       return valid[choice]
+
+
+def hashFile(path):
+  """
+  Compute the SHA256 hash of the file.
+
+  Args:
+    path (str): path to the file
+
+  Returns:
+    str: hash of the file
+  """
+
+  fileHash = hashlib.sha256()
+  with open(path, 'rb') as f:
+    while True:
+      data = f.read(65536)
+      if not data:
+        break
+      fileHash.update(data)
+
+  return fileHash.hexdigest()
