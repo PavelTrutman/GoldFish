@@ -39,7 +39,7 @@ python3 setup.py install
 To run the backup, execute
 
 ```bash
-goldFish config.yml
+goldFish backup config.yml
 ```
 
 with `config.yml` file looking like this:
