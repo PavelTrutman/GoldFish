@@ -3,7 +3,7 @@
 from setuptools import setup
 
 """
-Setup script for polynomial optimization module distribution.
+Setup script for backup module distribution.
 
 by Pavel Trutman, pavel.tutman@fel.cvut.cz
 """
@@ -19,5 +19,10 @@ setup (
   url='https://github.com/PavelTrutman/GoldFish',
   package_dir={'GoldFish' : '.'},
   packages = ['goldFish'],
+  install_requires = [
+    'pyyaml',
+    'click',
+    'terminaltables',
+  ],
   entry_points={'console_scripts': ['goldFish = goldFish.cli:cli']},
 )

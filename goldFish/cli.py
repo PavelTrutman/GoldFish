@@ -27,10 +27,13 @@ def backup(config):
   Backup.main(config)
 
 
-#@cli.command()
-#@common_params
-#def backupSize(configFile):
-  #print('Backup size')
+@cli.command(short_help='List all backups.', help='Lists all backups on the drive and in the database.')
+@common_params
+def list(config):
+
+  from .list import List
+
+  List.main(config)
 
 
 if __name__ == '__main__':

@@ -124,6 +124,22 @@ class Database:
       return res[0]
 
 
+  def getBackups(self):
+    """
+    Selects all stored backups.
+    
+    Args:
+
+    Returns:
+      list of tuples: list of all backups in the DB in form (id, name)
+    """
+    
+    self.db.execute('SELECT id, name FROM backups')
+    res = self.db.fetchall()
+    self.connection.commit()
+    return res
+
+
   def getFolder(self, name, backupId):
     """
     Selects folder id based on folder name and backup id.
@@ -146,6 +162,23 @@ class Database:
       return None
     else:
       return res[0]
+
+
+  def getFolders(self, backupId):
+    """
+    Selects all folders in the backup.
+    
+    Args:
+      backupId (int): id of the backup
+
+    Returns:
+      list of tuples: list of all folders in the backup in form (id, name)
+    """
+    
+    self.db.execute('SELECT id, name FROM folders WHERE backupId = ?', (backupId, ))
+    res = self.db.fetchall()
+    self.connection.commit()
+    return res
 
 
   def getFile(self, path, folderId):
