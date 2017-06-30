@@ -34,6 +34,8 @@ class Database:
     self.connection = sqlite3.connect(str(self.path))
     self.db = self.connection.cursor()
     self.db.execute('PRAGMA foreign_keys = ON')
+    self.db.execute('PRAGMA journal_mode = WAL')
+    self.db.execute('PRAGMA synchronous = NORMAL')
 
     if create:
       self.create()
@@ -117,7 +119,7 @@ class Database:
 
     self.db.execute('SELECT id FROM backups WHERE name = ? LIMIT 1', (name, ))
     res = self.db.fetchone()
-    self.connection.commit()
+    #self.connection.commit()
     if res == None:
       return None
     else:
@@ -136,7 +138,7 @@ class Database:
     
     self.db.execute('SELECT id, name FROM backups')
     res = self.db.fetchall()
-    self.connection.commit()
+    #self.connection.commit()
     return res
 
 
@@ -157,7 +159,7 @@ class Database:
 
     self.db.execute('SELECT id FROM folders WHERE name = ? AND backupId = ? LIMIT 1', (name, backupId))
     res = self.db.fetchone()
-    self.connection.commit()
+    #self.connection.commit()
     if res == None:
       return None
     else:
@@ -177,7 +179,7 @@ class Database:
     
     self.db.execute('SELECT id, name FROM folders WHERE backupId = ?', (backupId, ))
     res = self.db.fetchall()
-    self.connection.commit()
+    #self.connection.commit()
     return res
 
 
@@ -198,7 +200,7 @@ class Database:
 
     self.db.execute('SELECT id, hashId FROM files WHERE path = ? AND folderId = ? LIMIT 1', (path, folderId))
     res = self.db.fetchone()
-    self.connection.commit()
+    #self.connection.commit()
     if res == None:
       return None, None
     else:
@@ -237,7 +239,7 @@ class Database:
 
     self.db.execute('SELECT id FROM hashes WHERE hash = ? AND size = ? LIMIT 1', (hash, size))
     res = self.db.fetchone()
-    self.connection.commit()
+    #self.connection.commit()
     if res == None:
       return None
     else:
@@ -274,7 +276,7 @@ class Database:
 
     self.db.execute('SELECT files.id, backups.name, folders.name, files.path FROM files, folders, backups WHERE files.hashId = ? AND files.folderId = folders.id AND folders.backupId = backups.id ORDER BY files.id DESC', (hashId, ))
     res = self.db.fetchall()
-    self.connection.commit()
+    #self.connection.commit()
     return res
 
 
