@@ -36,5 +36,14 @@ def list(config):
   List.main(config)
 
 
+@cli.command(short_help='Prune needless backups.', help='Prune backups that are needless.')
+@common_params
+def prune(config):
+
+  from .prune import Prune
+
+  Prune.main(config)
+
+
 if __name__ == '__main__':
   cli()

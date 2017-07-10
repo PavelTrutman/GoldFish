@@ -89,23 +89,6 @@ class Database:
     return self.db.lastrowid
 
 
-  def newFolder(self, name, backupId):
-    """
-    Inserts new backup folder into the database.
-
-    Args:
-      name (str): name of the folder
-      backupId (int): id of the current backup
-
-    Returns:
-      int: id of the inserted folder
-    """
-
-    self.db.execute('INSERT INTO folders(name, backupId) VALUES(?, ?)', (name, backupId))
-    self.connection.commit()
-    return self.db.lastrowid
-
-
   def getBackup(self, name):
     """
     Selects backup id based on backup name.
@@ -140,6 +123,23 @@ class Database:
     res = self.db.fetchall()
     #self.connection.commit()
     return res
+
+
+  def newFolder(self, name, backupId):
+    """
+    Inserts new backup folder into the database.
+
+    Args:
+      name (str): name of the folder
+      backupId (int): id of the current backup
+
+    Returns:
+      int: id of the inserted folder
+    """
+
+    self.db.execute('INSERT INTO folders(name, backupId) VALUES(?, ?)', (name, backupId))
+    self.connection.commit()
+    return self.db.lastrowid
 
 
   def getFolder(self, name, backupId):
@@ -181,6 +181,22 @@ class Database:
     res = self.db.fetchall()
     #self.connection.commit()
     return res
+
+
+  def removeFolder(self, backupId, folderId):
+    """
+    Removes backup folder from the database.
+
+    Args:
+      backupId (int): id of the current backup
+      folderId (int): id of the folder to remove
+
+    Returns:
+      None
+    """
+
+    self.db.execute('DELETE FROM folders WHERE backupId = ? AND id = ?', (backupId, folderId))
+    self.connection.commit()
 
 
   def getFile(self, path, folderId):

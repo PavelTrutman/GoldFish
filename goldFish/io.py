@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
-import shutil
-import math
-import sys
 import re
+import sys
+import math
+import shutil
 import hashlib
+import terminaltables
 
 def readableSize(bytes):
   """
@@ -115,3 +116,41 @@ def hashFile(path):
       fileHash.update(data)
 
   return fileHash.hexdigest()
+
+
+def printBackups(backupsDict):
+  """
+  Prints table of the backups on the media and in the database.
+
+  Args:
+    backupsDict (dict): list of backups
+
+  Returns:
+    None
+  """
+
+  # create table
+  tableData = [['Datetime', 'Folder', 'HDD', 'DB']]
+  backups = list(backupsDict.keys())
+  backups.sort(reverse=True)
+  for backup in backups:
+    items = list(backupsDict[backup].keys())
+    items.sort()
+    if len(items) > 0:
+      for item, i in zip(items, range(len(items))):
+        if i == 0:
+          tableData.append([backup, item, '', ''])
+        else:
+          tableData.append(['', item, '', ''])
+        if backupsDict[backup][item]['HDD']:
+          tableData[-1][2] = 'X'
+        if backupsDict[backup][item]['DB']:
+          tableData[-1][3] = 'X'
+    else:
+      tableData.append([backup, '', '', ''])
+      
+
+  table = terminaltables.SingleTable(tableData)
+  table.justify_columns[2] = 'center'
+  table.justify_columns[3] = 'center'
+  print(table.table)
