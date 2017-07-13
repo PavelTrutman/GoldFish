@@ -23,6 +23,7 @@ class Config:
       'dest': '',
       'src': [],
     },
+    'followSymlinks': False,
     'database': {
       'enable': False,
     },
@@ -80,7 +81,7 @@ class Config:
       FileNotFoundError: when some of the backup folders does not exist
     """
 
-    # laod config from file
+    # load config from file
     config = self.load(path)
 
     # check backupDirTo
@@ -100,6 +101,11 @@ class Config:
       self.backupDirFrom = config['folders']['src']
     else:
       raise ConfigError('folders:src', config['folders']['src'])
+
+    # check follow symlinks
+    if config['followSymlinks'] not in [True, False]:
+      raise ConfigError('followSymlinks', config['followSymlinks'])
+    self.followSymlinks = config['followSymlinks']
 
     # check database
     self.dbEnable = config['database']['enable']

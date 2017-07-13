@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
+import os
 import re
 import sys
 import math
 import shutil
 import hashlib
+import pathlib
 import terminaltables
 
 def readableSize(bytes):
@@ -96,26 +98,35 @@ def queryYesNo(question, default=None):
       return valid[choice]
 
 
-def hashFile(path):
+def hashFile(path, followSymlinks):
   """
   Compute the SHA256 hash of the file.
 
   Args:
     path (str): path to the file
+    followSymlinks (bool): follow symlinks
 
   Returns:
     str: hash of the file
+    bool: symlink of the file
   """
 
   fileHash = hashlib.sha256()
-  with open(path, 'rb') as f:
-    while True:
-      data = f.read(65536)
-      if not data:
-        break
-      fileHash.update(data)
 
-  return fileHash.hexdigest()
+  if not followSymlinks and pathlib.Path(path).is_symlink():
+    symlink = True
+    data = os.readlink(path).encode()
+    fileHash.update(data)
+  else:
+    symlink = False
+    with open(path, 'rb') as f:
+      while True:
+        data = f.read(65536)
+        if not data:
+          break
+        fileHash.update(data)
+
+  return fileHash.hexdigest(), symlink
 
 
 def printBackups(backupsDict):

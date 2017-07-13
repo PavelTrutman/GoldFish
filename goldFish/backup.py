@@ -92,15 +92,15 @@ class Backup:
           sys.stdout.write('\r')
           sys.stdout.flush()
           copied = False
-          statFrom = os.stat(fileFrom)
+          statFrom = os.stat(fileFrom, follow_symlinks=config.followSymlinks)
           if not (dirPrev is None):
             filePrev = os.path.join(dirPrev, relPath, file)
             if os.path.isfile(filePrev):
-              statPrev = os.stat(filePrev)
+              statPrev = os.stat(filePrev, follow_symlinks=config.followSymlinks)
               if (statFrom.st_size == statPrev.st_size) and (round(statFrom.st_mtime) == round(statPrev.st_mtime)):
 
                 # link from previous backup
-                os.link(filePrev, fileTo)
+                os.link(filePrev, fileTo, follow_symlinks=config.followSymlinks)
                 copied = True
                 sizeLinked += statFrom.st_size
 
@@ -114,11 +114,11 @@ class Backup:
                     sys.stdout.flush()
                     sys.stdout.write('\r')
                     sys.stdout.flush()
-                    fileHash = hashFile(fileFrom)
+                    fileHash, fileSymlink = hashFile(fileFrom, config.followSymlinks)
                     fileSize = statFrom.st_size
-                    hashId = db.getHashId(fileHash, fileSize)
+                    hashId = db.getHashId(fileHash, fileSize, fileSymlink)
                     if hashId == None:
-                      hashId = db.insertHash(fileHash, fileSize)
+                      hashId = db.insertHash(fileHash, fileSize, fileSymlink)
                     db.insertFile(os.path.join(relPath, file), folderId, hashId)
                     
                   else:
@@ -136,11 +136,11 @@ class Backup:
               sys.stdout.flush()
               sys.stdout.write('\r')
               sys.stdout.flush()
-              fileHash = hashFile(fileFrom)
+              fileHash, fileSymlink = hashFile(fileFrom, config.followSymlinks)
               fileSize = statFrom.st_size
-              hashId = db.getHashId(fileHash, fileSize)
+              hashId = db.getHashId(fileHash, fileSize, fileSymlink)
               if hashId == None:
-                hashId = db.insertHash(fileHash, fileSize)
+                hashId = db.insertHash(fileHash, fileSize, fileSymlink)
               else:
 
                 # find file with same hash
@@ -148,10 +148,10 @@ class Backup:
                 for sFile in sameFiles:
                   sFilePath = os.path.join(config.backupDirTo, sFile[1], sFile[2], sFile[3])
                   if os.path.isfile(sFilePath):
-                    sFileStat = os.stat(sFilePath)
-                    fromStat = os.stat(fileFrom)
+                    sFileStat = os.stat(sFilePath, follow_symlinks=config.followSymlinks)
+                    fromStat = os.stat(fileFrom, follow_symlinks=config.followSymlinks)
                     if round(sFileStat.st_mtime) == round(fromStat.st_mtime):
-                      os.link(sFilePath, fileTo)
+                      os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
                       linked = True
                       sizeHashLinked += statFrom.st_size
                       break
@@ -161,9 +161,9 @@ class Backup:
                     if os.path.isfile(sFilePath):
                       mtimeDiffer = True
                       if config.dbLinkMDiffer:
-                        os.link(sFilePath, fileTo)
-                        if os.stat(fileFrom).st_mtime > os.stat(sFilePath).st_mtime:
-                          shutil.copystat(fileFrom, fileTo)
+                        os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
+                        if os.stat(fileFrom, follow_symlinks=config.followSymlinks).st_mtime > os.stat(sFilePath, follow_symlinks=config.followSymlinks).st_mtime:
+                          shutil.copystat(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
                         linked = True
                         sizeHashLinked += statFrom.st_size
                       break
@@ -176,7 +176,7 @@ class Backup:
               sys.stdout.flush()
               sys.stdout.write('\r')
               sys.stdout.flush()
-              shutil.copy2(fileFrom, fileTo)
+              shutil.copy2(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
               sizeCopied += statFrom.st_size
             printToTerminalSize(' ')
             sys.stdout.write('\r')

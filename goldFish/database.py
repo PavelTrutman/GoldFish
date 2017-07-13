@@ -68,7 +68,7 @@ class Database:
 
     self.db.execute('CREATE TABLE backups(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)')
     self.db.execute('CREATE TABLE folders(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, backupId INTEGER REFERENCES backups(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT folders_unique__name_backupId UNIQUE(name, backupId))')
-    self.db.execute('CREATE TABLE hashes(id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, size INTEGER, CONSTRAINT hashes_unique__hash_size UNIQUE(hash, size))')
+    self.db.execute('CREATE TABLE hashes(id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, size INTEGER, symlink BOOLEAN CHECK(symlink IN (0, 1)), CONSTRAINT hashes_unique__hash_size UNIQUE(hash, size))')
     self.db.execute('CREATE TABLE files(id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, folderId INTEGER REFERENCES folders(id) ON DELETE CASCADE ON UPDATE CASCADE, hashId INTEGER REFERENCES hashes(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT files_unique__path_folderId UNIQUE(path, folderId))')
     self.connection.commit()
 
@@ -241,19 +241,20 @@ class Database:
     return self.db.lastrowid
 
 
-  def getHashId(self, hash, size):
+  def getHashId(self, hash, size, symlink):
     """
     Select hash id based on the hash and file size.
 
     Args:
       hash (str): hash of the file
       size (int): size of the file in bytes
+      symlink (bool): hash of symlink
 
     Returns:
       int: id of the hash
     """
 
-    self.db.execute('SELECT id FROM hashes WHERE hash = ? AND size = ? LIMIT 1', (hash, size))
+    self.db.execute('SELECT id FROM hashes WHERE hash = ? AND size = ? AND symlink = ? LIMIT 1', (hash, size, symlink))
     res = self.db.fetchone()
     #self.connection.commit()
     if res == None:
@@ -262,19 +263,20 @@ class Database:
       return res[0]
 
 
-  def insertHash(self, hash, size):
+  def insertHash(self, hash, size, symlink):
     """
     Inserts new hash into the databse.
 
     Args:
       hash (str): hash of the file
       size (int): size of the file
+      symlink (bool): hash of symlink
 
     Returns:
       int: id of the inserted hash
     """
 
-    self.db.execute('INSERT INTO hashes(hash, size)  VALUES (?, ?)', (hash, size))
+    self.db.execute('INSERT INTO hashes(hash, size, symlink)  VALUES (?, ?, ?)', (hash, size, symlink))
     self.connection.commit()
     return self.db.lastrowid
 
