@@ -76,6 +76,7 @@ class Backup:
       sizeCopied = 0
       sizeLinked = 0
       sizeHashLinked = 0
+      numFiles = 0
      
       for root, dirs, files in os.walk(dirFrom):
         relPath = os.path.relpath(root, dirFrom)
@@ -103,6 +104,7 @@ class Backup:
                 os.link(filePrev, fileTo, follow_symlinks=config.followSymlinks)
                 copied = True
                 sizeLinked += statFrom.st_size
+                numFiles += 1
 
                 if config.dbEnable:
                   # update db
@@ -154,6 +156,7 @@ class Backup:
                       os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
                       linked = True
                       sizeHashLinked += statFrom.st_size
+                      numFiles += 1
                       break
                 if not linked:
                   for sFile in sameFiles:
@@ -166,6 +169,7 @@ class Backup:
                           shutil.copystat(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
                         linked = True
                         sizeHashLinked += statFrom.st_size
+                        numFiles += 1
                       break
                   
               db.insertFile(os.path.join(relPath, file), folderId, hashId)
@@ -178,6 +182,7 @@ class Backup:
               sys.stdout.flush()
               shutil.copy2(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
               sizeCopied += statFrom.st_size
+              numFiles += 1
             printToTerminalSize(' ')
             sys.stdout.write('\r')
             sys.stdout.flush()
@@ -198,6 +203,7 @@ class Backup:
 
       os.sync()
 
-      print('  Copied:      ' + readableSize(sizeCopied))
-      print('  Linked:      ' + readableSize(sizeLinked))
-      print('  Hash-linked: ' + readableSize(sizeHashLinked))
+      print('  Copied:        ' + readableSize(sizeCopied))
+      print('  Linked:        ' + readableSize(sizeLinked))
+      print('  Hash-linked:   ' + readableSize(sizeHashLinked))
+      print('  Files written: ' + str(numFiles))
