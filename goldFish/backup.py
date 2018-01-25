@@ -13,26 +13,36 @@ from .database import Database
 
 class Backup:
 
-  def main(configFile):
+  def main(configFile, dryRun):
     """
     Creates new backup.
 
     Args:
       configFile (str): path to the configuration file
+      dryRun (bool): whether in testing mode
     """
 
     config = Config(configFile)
+    config.dryRun = dryRun
 
     # load database
     if config.dbEnable:
-      db = Database(config.dbPath)
+      if not config.dryRun:
+        db = Database(config.dbPath)
+      else:
+        if pathlib.Path(config.dbPath).exists():
+          db = Database(config.dbPath, readonly=True)
+          db = db.moveToMemory()
+        else:
+          db = Database(Database.MEMORY)
 
     prevBackups = os.listdir(config.backupDirTo)
     prevBackups.sort(reverse=True)
     
     today = time.strftime('%Y%m%d_%H%M')
     dirToday = os.path.join(config.backupDirTo, today)
-    os.mkdir(dirToday)
+    if not config.dryRun:
+      os.mkdir(dirToday)
 
     printHeadline()
 
@@ -45,7 +55,8 @@ class Backup:
     for dirFrom in config.backupDirFrom:
       backupDir = os.path.basename(dirFrom)
       dirTo = os.path.join(dirToday, backupDir)
-      os.mkdir(dirTo)
+      if not config.dryRun:
+        os.mkdir(dirTo)
       if config.dbEnable:
         folderId = db.newFolder(backupDir, backupId)
     
@@ -84,7 +95,8 @@ class Backup:
           relPath = ''
         curDirTo = os.path.join(dirTo, relPath)
         for dir in dirs:
-          os.mkdir(os.path.join(curDirTo, dir))
+          if not config.dryRun:
+            os.mkdir(os.path.join(curDirTo, dir))
         for file in files:
           fileFrom = os.path.join(root, file)
           fileTo = os.path.join(curDirTo, file)
@@ -101,7 +113,8 @@ class Backup:
               if (statFrom.st_size == statPrev.st_size) and (round(statFrom.st_mtime) == round(statPrev.st_mtime)):
 
                 # link from previous backup
-                os.link(filePrev, fileTo, follow_symlinks=config.followSymlinks)
+                if not config.dryRun:
+                  os.link(filePrev, fileTo, follow_symlinks=config.followSymlinks)
                 copied = True
                 sizeLinked += statFrom.st_size
                 numFiles += 1
@@ -150,8 +163,9 @@ class Backup:
                 for sFile in sameFiles:
                   if round(statFrom.st_mtime) == sFile[4]:
                     sFilePath = os.path.join(config.backupDirTo, sFile[1], sFile[2], sFile[3])
-                    if os.path.isfile(sFilePath):
-                      os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
+                    if os.path.isfile(sFilePath) or (config.dryRun and sFile[1] == today):
+                      if not config.dryRun:
+                        os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
                       linked = True
                       sizeHashLinked += statFrom.st_size
                       numFiles += 1
@@ -159,16 +173,17 @@ class Backup:
                 if not linked:
                   for sFile in sameFiles:
                     sFilePath = os.path.join(config.backupDirTo, sFile[1], sFile[2], sFile[3])
-                    if os.path.isfile(sFilePath):
+                    if os.path.isfile(sFilePath) or (config.dryRun and sFile[1] == today):
                       mtimeDiffer = True
                       if config.dbLinkMDiffer:
-                        os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
-                        if round(statFrom.st_mtime) > sFile[4]:
-                          shutil.copystat(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
+                        if not config.dryRun:
+                          os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
+                          if round(statFrom.st_mtime) > sFile[4]:
+                            shutil.copystat(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
                         linked = True
                         sizeHashLinked += statFrom.st_size
                         numFiles += 1
-                      break
+                        break
                   
               db.insertFile(os.path.join(relPath, file), round(statFrom.st_mtime), folderId, hashId)
             
@@ -178,7 +193,8 @@ class Backup:
               sys.stdout.flush()
               sys.stdout.write('\r')
               sys.stdout.flush()
-              shutil.copy2(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
+              if not config.dryRun:
+                shutil.copy2(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
               sizeCopied += statFrom.st_size
               numFiles += 1
             printToTerminalSize(' ')

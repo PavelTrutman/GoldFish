@@ -19,12 +19,13 @@ def cli():
 
 
 @cli.command(short_help='Create new backup.', help='Creates new backup as defined in the CONFIG file.')
+@click.option('--dry-run', is_flag=True)
 @common_params
-def backup(config):
+def backup(config, dry_run):
 
   from .backup import Backup
 
-  Backup.main(config)
+  Backup.main(config, dry_run)
 
 
 @cli.command(short_help='List all backups.', help='Lists all backups on the drive and in the database.')

@@ -11,33 +11,43 @@ class Database:
   by Pavel Trutman, pavel.trutman@fel.cvut.cz
   """
 
+  # path for storage in memory
+  MEMORY = ':memory:'
 
-  def __init__(self, path):
+
+  def __init__(self, path, readonly=False, init=True):
     """
     Connects to the database.
 
     Args:
       path (str): path to the sqlite database file
+      readonly (bool): open database in readonly mode
+      init (bool): whether to initialize the database with empty tables
 
     Returns:
       None
     """
 
-    create = False
+    self.readonly = readonly
     self.path = pathlib.Path(path)
-    if not self.path.exists():
-      if queryYesNo('The database at ' + str(self.path) + ' does not exists. Do you want to create it?', default='yes'):
-        create = True
+
+    create = False
+    if not self.readonly:
+      if not path == Database.MEMORY:
+        if not self.path.exists():
+          if queryYesNo('The database at ' + str(self.path) + ' does not exists. Do you want to create it?', default='yes'):
+            create = True
+          else:
+            raise DatabaseError('Database at ' + str(self.path) + ' does not exists and will not be created.')
       else:
-        raise DatabaseError('Database at ' + str(self.path) + ' does not exists and will not be created.')
+        create = True
+    else:
+      if not self.path.exists():
+        raise DatabaseError('Database at ' + str(self.path) + ' does not exists and will not be created because of the readonly flag.')
 
-    self.connection = sqlite3.connect(str(self.path))
-    self.db = self.connection.cursor()
-    self.db.execute('PRAGMA foreign_keys = ON')
-    self.db.execute('PRAGMA journal_mode = WAL')
-    self.db.execute('PRAGMA synchronous = NORMAL')
+    self.open()
 
-    if create:
+    if create and init:
       self.create()
 
 
@@ -56,6 +66,26 @@ class Database:
       self.connection.close()
 
 
+  def open(self):
+    """
+    Opens the databse file and init with basic settings.
+
+    Args:
+
+    Returns:
+      None
+    """
+
+    if self.readonly:
+      self.connection = sqlite3.connect('file:' + str(self.path) + '?mode=ro', uri=True)
+    else:
+      self.connection = sqlite3.connect(str(self.path))
+    self.db = self.connection.cursor()
+    self.db.execute('PRAGMA foreign_keys = ON')
+    self.db.execute('PRAGMA journal_mode = WAL')
+    self.db.execute('PRAGMA synchronous = NORMAL')
+
+
   def create(self):
     """
     Initialize new database and creates required tables.
@@ -71,6 +101,30 @@ class Database:
     self.db.execute('CREATE TABLE hashes(id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, size INTEGER, symlink BOOLEAN CHECK(symlink IN (0, 1)), CONSTRAINT hashes_unique__hash_size UNIQUE(hash, size))')
     self.db.execute('CREATE TABLE files(id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, mtime INT, folderId INTEGER REFERENCES folders(id) ON DELETE CASCADE ON UPDATE CASCADE, hashId INTEGER REFERENCES hashes(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT files_unique__path_folderId UNIQUE(path, folderId))')
     self.connection.commit()
+
+
+  def moveToMemory(self):
+    """
+    Copy the infile stored database into memory and returns it.
+
+    Args:
+
+    Returns:
+      Database: in memory database
+    """
+
+    # open new database stored in memory
+    memDb = Database(Database.MEMORY, init=False)
+
+    # dump infile database
+    query = "".join(line for line in self.connection.iterdump())
+
+    # fill into memory
+    memDb.db.execute('PRAGMA foreign_keys = OFF')
+    memDb.connection.executescript(query)
+    memDb.db.execute('PRAGMA foreign_keys = ON')
+
+    return memDb
 
 
   def newBackup(self, name):
