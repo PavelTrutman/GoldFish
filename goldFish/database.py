@@ -69,7 +69,7 @@ class Database:
     self.db.execute('CREATE TABLE backups(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)')
     self.db.execute('CREATE TABLE folders(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, backupId INTEGER REFERENCES backups(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT folders_unique__name_backupId UNIQUE(name, backupId))')
     self.db.execute('CREATE TABLE hashes(id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, size INTEGER, symlink BOOLEAN CHECK(symlink IN (0, 1)), CONSTRAINT hashes_unique__hash_size UNIQUE(hash, size))')
-    self.db.execute('CREATE TABLE files(id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, folderId INTEGER REFERENCES folders(id) ON DELETE CASCADE ON UPDATE CASCADE, hashId INTEGER REFERENCES hashes(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT files_unique__path_folderId UNIQUE(path, folderId))')
+    self.db.execute('CREATE TABLE files(id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, mtime INT, folderId INTEGER REFERENCES folders(id) ON DELETE CASCADE ON UPDATE CASCADE, hashId INTEGER REFERENCES hashes(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT files_unique__path_folderId UNIQUE(path, folderId))')
     self.connection.commit()
 
 
@@ -223,12 +223,13 @@ class Database:
       return res
 
 
-  def insertFile(self, path, folderId, hashId):
+  def insertFile(self, path, mtime, folderId, hashId):
     """
     Inserts new file into the databse.
 
     Args:
       path (str): path to the file
+      mtime (int): mtime of the file
       folderId (int): id of the folder
       hashId (int): id of the hash
 
@@ -236,7 +237,7 @@ class Database:
       int: id of the inserted file
     """
 
-    self.db.execute('INSERT INTO files(path, folderId, hashId)  VALUES (?, ?, ?)', (path, folderId, hashId))
+    self.db.execute('INSERT INTO files(path, mtime, folderId, hashId)  VALUES (?, ?, ?, ?)', (path, mtime, folderId, hashId))
     self.connection.commit()
     return self.db.lastrowid
 
@@ -292,7 +293,7 @@ class Database:
       list: list of files with the same hash
     """
 
-    self.db.execute('SELECT files.id, backups.name, folders.name, files.path FROM files, folders, backups WHERE files.hashId = ? AND files.folderId = folders.id AND folders.backupId = backups.id ORDER BY files.id DESC', (hashId, ))
+    self.db.execute('SELECT files.id, backups.name, folders.name, files.path, files.mtime FROM files, folders, backups WHERE files.hashId = ? AND files.folderId = folders.id AND folders.backupId = backups.id ORDER BY files.id DESC', (hashId, ))
     res = self.db.fetchall()
     #self.connection.commit()
     return res

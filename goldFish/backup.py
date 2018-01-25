@@ -121,12 +121,12 @@ class Backup:
                     hashId = db.getHashId(fileHash, fileSize, fileSymlink)
                     if hashId == None:
                       hashId = db.insertHash(fileHash, fileSize, fileSymlink)
-                    db.insertFile(os.path.join(relPath, file), folderId, hashId)
+                    db.insertFile(os.path.join(relPath, file), round(statFrom.st_mtime), folderId, hashId)
                     
                   else:
 
                     # insert new file into the db using prev file
-                    db.insertFile(os.path.join(relPath, file), folderId, hashIdPrev)
+                    db.insertFile(os.path.join(relPath, file), round(statFrom.st_mtime), folderId, hashIdPrev)
                 
           if not copied:
 
@@ -148,11 +148,9 @@ class Backup:
                 # find file with same hash
                 sameFiles = db.getFilesByHash(hashId)
                 for sFile in sameFiles:
-                  sFilePath = os.path.join(config.backupDirTo, sFile[1], sFile[2], sFile[3])
-                  if os.path.isfile(sFilePath):
-                    sFileStat = os.stat(sFilePath, follow_symlinks=config.followSymlinks)
-                    fromStat = os.stat(fileFrom, follow_symlinks=config.followSymlinks)
-                    if round(sFileStat.st_mtime) == round(fromStat.st_mtime):
+                  if round(statFrom.st_mtime) == sFile[4]:
+                    sFilePath = os.path.join(config.backupDirTo, sFile[1], sFile[2], sFile[3])
+                    if os.path.isfile(sFilePath):
                       os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
                       linked = True
                       sizeHashLinked += statFrom.st_size
@@ -165,14 +163,14 @@ class Backup:
                       mtimeDiffer = True
                       if config.dbLinkMDiffer:
                         os.link(sFilePath, fileTo, follow_symlinks=config.followSymlinks)
-                        if os.stat(fileFrom, follow_symlinks=config.followSymlinks).st_mtime > os.stat(sFilePath, follow_symlinks=config.followSymlinks).st_mtime:
+                        if round(statFrom.st_mtime) > sFile[4]:
                           shutil.copystat(fileFrom, fileTo, follow_symlinks=config.followSymlinks)
                         linked = True
                         sizeHashLinked += statFrom.st_size
                         numFiles += 1
                       break
                   
-              db.insertFile(os.path.join(relPath, file), folderId, hashId)
+              db.insertFile(os.path.join(relPath, file), round(statFrom.st_mtime), folderId, hashId)
             
 
             if not linked:
