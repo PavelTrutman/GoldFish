@@ -46,5 +46,15 @@ def prune(config):
   Prune.main(config)
 
 
+@cli.command(short_help='Get size of folder in the backup.', help='Get size of folder in the backup.')
+@click.argument('path', type=click.Path(exists=True, readable=True))
+@click.help_option('--help', '-h')
+def size(path):
+
+  from .size import Size
+
+  Size.main(path)
+
+
 if __name__ == '__main__':
   cli()
