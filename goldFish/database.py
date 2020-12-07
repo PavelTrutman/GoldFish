@@ -96,14 +96,13 @@ class Database:
       None
     """
 
-    self.db.execute('CREATE TABLE backups(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)')
-    self.db.execute('CREATE TABLE folders(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, backupId INTEGER REFERENCES backups(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT folders_unique__name_backupId UNIQUE(name, backupId))')
+    self.db.execute('CREATE TABLE folders(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, CONSTRAINT folders_unique__name UNIQUE(name))')
     self.db.execute('CREATE TABLE hashes(id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, size INTEGER, symlink BOOLEAN CHECK(symlink IN (0, 1)), CONSTRAINT hashes_unique__hash_size UNIQUE(hash, size))')
     self.db.execute('CREATE TABLE files(id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, mtime INT, folderId INTEGER REFERENCES folders(id) ON DELETE CASCADE ON UPDATE CASCADE, hashId INTEGER REFERENCES hashes(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT files_unique__path_folderId UNIQUE(path, folderId))')
     self.connection.commit()
 
 
-  def moveToMemory(self):
+  def __moveToMemory(self):
     """
     Copy the infile stored database into memory and returns it.
 
@@ -127,7 +126,7 @@ class Database:
     return memDb
 
 
-  def newBackup(self, name):
+  def __newBackup(self, name):
     """
     Inserts new backup into the database.
 
@@ -143,7 +142,7 @@ class Database:
     return self.db.lastrowid
 
 
-  def getBackup(self, name):
+  def __getBackup(self, name):
     """
     Selects backup id based on backup name.
 
@@ -163,7 +162,7 @@ class Database:
       return res[0]
 
 
-  def getBackups(self):
+  def __getBackups(self):
     """
     Selects all stored backups.
     
@@ -179,77 +178,68 @@ class Database:
     return res
 
 
-  def newFolder(self, name, backupId):
+  def newFolder(self, name):
     """
     Inserts new backup folder into the database.
 
     Args:
       name (str): name of the folder
-      backupId (int): id of the current backup
 
     Returns:
       int: id of the inserted folder
     """
 
-    self.db.execute('INSERT INTO folders(name, backupId) VALUES(?, ?)', (name, backupId))
+    self.db.execute('INSERT INTO folders(name) VALUES(?)', (name, ))
     self.connection.commit()
     return self.db.lastrowid
 
 
-  def getFolder(self, name, backupId):
+  def getFolder(self, name):
     """
-    Selects folder id based on folder name and backup id.
+    Selects folder id based on folder name.
 
     Args:
       name (str): name of the folder
-      backupId (int): id of the backup
 
     Returns:
       int: id of the folder
     """
 
-    if backupId == None:
-      return None
-
-    self.db.execute('SELECT id FROM folders WHERE name = ? AND backupId = ? LIMIT 1', (name, backupId))
+    self.db.execute('SELECT id FROM folders WHERE name = ? LIMIT 1', (name, ))
     res = self.db.fetchone()
-    #self.connection.commit()
     if res == None:
       return None
     else:
       return res[0]
 
 
-  def getFolders(self, backupId):
+  def getFolders(self):
     """
     Selects all folders in the backup.
     
     Args:
-      backupId (int): id of the backup
 
     Returns:
       list of tuples: list of all folders in the backup in form (id, name)
     """
     
-    self.db.execute('SELECT id, name FROM folders WHERE backupId = ?', (backupId, ))
+    self.db.execute('SELECT id, name FROM folders')
     res = self.db.fetchall()
-    #self.connection.commit()
     return res
 
 
-  def removeFolder(self, backupId, folderId):
+  def removeFolder(self, folderId):
     """
     Removes backup folder from the database.
 
     Args:
-      backupId (int): id of the current backup
       folderId (int): id of the folder to remove
 
     Returns:
       None
     """
 
-    self.db.execute('DELETE FROM folders WHERE backupId = ? AND id = ?', (backupId, folderId))
+    self.db.execute('DELETE FROM folders WHERE id = ?', (folderId, ))
     self.connection.commit()
 
 
@@ -270,7 +260,6 @@ class Database:
 
     self.db.execute('SELECT id, hashId FROM files WHERE path = ? AND folderId = ? LIMIT 1', (path, folderId))
     res = self.db.fetchone()
-    #self.connection.commit()
     if res == None:
       return None, None
     else:
@@ -311,11 +300,31 @@ class Database:
 
     self.db.execute('SELECT id FROM hashes WHERE hash = ? AND size = ? AND symlink = ? LIMIT 1', (hash, size, symlink))
     res = self.db.fetchone()
-    #self.connection.commit()
     if res == None:
       return None
     else:
       return res[0]
+
+
+  def getHashRow(self, hashId):
+    """
+    Select whoke hash row.
+
+    Args:
+      hsdhId (int): id of the hash
+
+    Returns:
+      hash (str): hash of the file
+      size (int): size of the file
+      symlink (bool): hash of symlink
+    """
+
+    self.db.execute('SELECT hash, size, symlink FROM hashes WHERE id = ? LIMIT 1', (hashId, ))
+    res = self.db.fetchone()
+    if res == None:
+      return None, None, None
+    else:
+      return res
 
 
   def insertHash(self, hash, size, symlink):
@@ -331,9 +340,14 @@ class Database:
       int: id of the inserted hash
     """
 
-    self.db.execute('INSERT INTO hashes(hash, size, symlink)  VALUES (?, ?, ?)', (hash, size, symlink))
-    self.connection.commit()
-    return self.db.lastrowid
+    self.db.execute('SELECT id FROM hashes WHERE hash = ? AND size = ? AND symlink = ? LIMIT 1', (hash, size, symlink))
+    res = self.db.fetchone()
+    if res == None:
+      self.db.execute('INSERT INTO hashes(hash, size, symlink)  VALUES (?, ?, ?)', (hash, size, symlink))
+      self.connection.commit()
+      return self.db.lastrowid
+    else:
+      return res[0]
 
 
   def getFilesByHash(self, hashId):
@@ -347,9 +361,8 @@ class Database:
       list: list of files with the same hash
     """
 
-    self.db.execute('SELECT files.id, backups.name, folders.name, files.path, files.mtime FROM files, folders, backups WHERE files.hashId = ? AND files.folderId = folders.id AND folders.backupId = backups.id ORDER BY files.id DESC', (hashId, ))
+    self.db.execute('SELECT folders.name, files.id, files.path, files.mtime FROM files, folders WHERE files.hashId = ? AND files.folderId = folders.id ORDER BY files.id DESC', (hashId, ))
     res = self.db.fetchall()
-    #self.connection.commit()
     return res
 
 
