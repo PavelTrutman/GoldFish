@@ -33,14 +33,16 @@ def getBackups(config):
   dbPath = pathlib.Path(config.dbPath)
   if config.dbEnable:
     for backup in backups:
-      db = Database(dbPath / (backup.name + '.sqlite'), readonly=True)
-      backupItems = db.getFolders()
-      if backup.name not in backupsDict:
-        backupsDict[backup] = {}
-      for _, item in backupItems:
-        if item not in backupsDict[backup.name]:
-          backupsDict[backup.name][item] = {'HDD': False, 'DB': True}
-        else:
-          backupsDict[backup.name][item]['DB'] = True
+      dbPathBackup = dbPath / (backup.name + '.sqlite')
+      if dbPathBackup.is_file():
+        db = Database(dbPathBackup, readonly=True)
+        backupItems = db.getFolders()
+        if backup.name not in backupsDict:
+          backupsDict[backup] = {}
+        for _, item in backupItems:
+          if item not in backupsDict[backup.name]:
+            backupsDict[backup.name][item] = {'HDD': False, 'DB': True}
+          else:
+            backupsDict[backup.name][item]['DB'] = True
 
   return backupsDict
