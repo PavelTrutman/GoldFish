@@ -24,6 +24,7 @@ class Config:
       'src': [],
     },
     'followSymlinks': False,
+    'history': -1,
     'database': {
       'enable': False,
     },
@@ -106,6 +107,13 @@ class Config:
     if config['followSymlinks'] not in [True, False]:
       raise ConfigError('followSymlinks', config['followSymlinks'])
     self.followSymlinks = config['followSymlinks']
+
+    # check history
+    if not isinstance(config['history'], int):
+      raise ConfigError('history', config['history'])
+    if not config['history'] >= -1:
+      raise ConfigError('history', config['history'])
+    self.history = config['history']
 
     # check database
     self.dbEnable = config['database']['enable']
