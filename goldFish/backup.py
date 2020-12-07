@@ -108,7 +108,7 @@ class Backup:
           statFrom = os.stat(fileFrom, follow_symlinks=config.followSymlinks)
           if not (dirPrev is None):
             filePrev = os.path.join(dirPrev, relPath, file)
-            if os.path.isfile(filePrev):
+            if os.path.isfile(filePrev) or os.path.islink(filePrev):
               statPrev = os.stat(filePrev, follow_symlinks=config.followSymlinks)
               if (statFrom.st_size == statPrev.st_size) and (round(statFrom.st_mtime) == round(statPrev.st_mtime)):
 
