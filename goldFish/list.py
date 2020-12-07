@@ -21,13 +21,7 @@ class List:
 
     config = Config(configFile)
 
-    # load database
-    if config.dbEnable:
-      db = Database(config.dbPath)
-    else:
-      db = None
-
     printHeadline()
 
-    backupsDict = getBackups(config, db)
+    backupsDict = getBackups(config)
     printBackups(backupsDict)

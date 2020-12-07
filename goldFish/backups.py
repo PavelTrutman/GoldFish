@@ -1,47 +1,46 @@
 #!/usr/bin/python3
 
-import os
 import pathlib
 import datetime
+from .database import Database
 
-def getBackups(config, db):
+def getBackups(config):
   """
   Returns list of the backups on the media and in the database.
 
   Args:
     config (Config): configuration object
-    db (Database): database object
 
   Ruturns:
     dict: list of backups
   """
 
-  dirToPath = pathlib.Path(config.backupDirTo)
-  backups = os.listdir(str(dirToPath))
+  dirTo = pathlib.Path(config.backupDirTo)
+  backups = list(dirTo.iterdir())
   backups.sort(reverse=True)
   
   backupsDict = {}
 
   # get backups from HDD
   for backup in backups:
-    backupFolder = dirToPath.joinpath(backup)
-    if backupFolder.is_dir():
-      backupItems = os.listdir(str(backupFolder))
-      backupsDict[backup] = {}
+    if backup.is_dir():
+      backupItems = backup.iterdir()
+      backupsDict[backup.name] = {}
       for item in backupItems:
-        backupsDict[backup][item] = {'HDD': True, 'DB': False}
+        backupsDict[backup.name][item.name] = {'HDD': True, 'DB': False}
 
   # get backups form DB
+  dbPath = pathlib.Path(config.dbPath)
   if config.dbEnable:
-    backups = db.getBackups()
-    for backupId, backup in backups:
-      backupItems = db.getFolders(backupId)
-      if backup not in backupsDict:
+    for backup in backups:
+      db = Database(dbPath / (backup.name + '.sqlite'), readonly=True)
+      backupItems = db.getFolders()
+      if backup.name not in backupsDict:
         backupsDict[backup] = {}
       for _, item in backupItems:
-        if item not in backupsDict[backup]:
-          backupsDict[backup][item] = {'HDD': False, 'DB': True}
+        if item not in backupsDict[backup.name]:
+          backupsDict[backup.name][item] = {'HDD': False, 'DB': True}
         else:
-          backupsDict[backup][item]['DB'] = True
+          backupsDict[backup.name][item]['DB'] = True
 
   return backupsDict
