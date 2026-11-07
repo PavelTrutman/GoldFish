@@ -26,14 +26,17 @@ GoldFish is a backup utility for creating incremental backups. When creating new
 ```
 
 ## Installation
-To install all required packages and setup this package, run the following code.
+Install `pipx` on Debian, then install GoldFish from the repository:
 
 ```bash
+sudo apt install pipx
+pipx ensurepath
 git clone https://github.com/PavelTrutman/GoldFish.git
 cd GoldFish
-pip3 install -r requirements.txt
-python3 setup.py install
+pipx install .
 ```
+
+If you ran `pipx ensurepath`, open a new terminal before running `goldFish`.
 
 ## Usage
 To run the backup, execute
