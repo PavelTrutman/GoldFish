@@ -4,6 +4,8 @@
 
 #Python
 __pycache__/
+build/
+dist/
 *.py[cod]
 *$py.class
 /goldFish.egg-info/
