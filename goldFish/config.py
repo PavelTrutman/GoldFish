@@ -4,7 +4,7 @@ import os
 import yaml
 import copy
 import pathlib
-import collections
+import collections.abc
 from os.path import normpath
 
 class Config:
@@ -187,7 +187,7 @@ def deepUpdate(d, u):
   """
 
   for k, v in u.items():
-    if isinstance(v, collections.Mapping):
+    if isinstance(v, collections.abc.Mapping):
       r = deepUpdate(d.get(k, {}), v)
       d[k] = r
     else:
