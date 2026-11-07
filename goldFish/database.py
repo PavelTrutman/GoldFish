@@ -97,7 +97,7 @@ class Database:
     """
 
     self.db.execute('CREATE TABLE folders(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, CONSTRAINT folders_unique__name UNIQUE(name))')
-    self.db.execute('CREATE TABLE hashes(id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, size INTEGER, symlink BOOLEAN CHECK(symlink IN (0, 1)), CONSTRAINT hashes_unique__hash_size UNIQUE(hash, size))')
+    self.db.execute('CREATE TABLE hashes(id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT, size INTEGER, symlink BOOLEAN CHECK(symlink IN (0, 1)), CONSTRAINT hashes_unique__hash_size_symlink UNIQUE(hash, size, symlink))')
     self.db.execute('CREATE TABLE files(id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT, mtime INT, folderId INTEGER REFERENCES folders(id) ON DELETE CASCADE ON UPDATE CASCADE, hashId INTEGER REFERENCES hashes(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT files_unique__path_folderId UNIQUE(path, folderId))')
     self.connection.commit()
 
